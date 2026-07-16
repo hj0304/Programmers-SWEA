@@ -1,0 +1,83 @@
+# 끝까지 연결할 수 있는지 체크
+def can_place(y, x, dir):
+    ny, nx = y + dy[dir], x + dx[dir]
+    while 0 <= ny < N and 0 <= nx < N:
+        if grid[ny][nx] != 0:
+            return False
+        ny += dy[dir]
+        nx += dx[dir]
+    
+    return True
+
+# can_place라면 전선깔기
+def set_wire(y, x, dir, val):
+    length = 0
+    ny, nx = y + dy[dir], x + dx[dir]
+    
+    while 0 <= ny < N and 0 <= nx < N:
+        grid[ny][nx] = val
+        length += 1
+        ny += dy[dir]
+        nx += dx[dir]
+    
+    return length
+
+def dfs(index, connected, wire_length):
+    global max_cores, min_length
+    
+    # 가지치기
+    if connected + (total_cores - index) < max_cores:
+        return
+    
+    # 모든 코어가 연결됐다면
+    if index == total_cores:
+        # 더 많은 코어를 연결할 수 있는 경우라면 -> max_cores와 min_length를 동시에 업데이트
+        if max_cores < connected:
+            max_cores = connected
+            min_length = wire_length
+        
+        # 연결한 코어 수가 현재 최대 연결수와 동일하다면 -> min_length가 더 작은 값이 될 수 있다면 업데이트
+        elif max_cores == connected:
+            min_length = min(min_length, wire_length)
+            
+        return
+    
+    y, x = cores[index]
+            
+    for d in range(4):
+        # 전선을 끝까지 놓을 수 있다면 -> 전선 깔기
+        if can_place(y, x, d):
+            now_length = set_wire(y, x, d, 2)
+            # [재귀] 전선 깔고 다음 코어로 넘어가기
+            dfs(index+1, connected+1, wire_length + now_length)
+            # 백트래킹( 전선깔고 다시 원상태로 원상 복구 )
+            set_wire(y, x, d, 0)
+        
+    # 해당 코어가 사방으로 전선 놓기를 시도했는데 놓을 수 없는 경우 -> 해당 코어는 건너뛰고 다음 코어 연결을 시도해야한다.
+    dfs(index+1, connected, wire_length)
+    
+    
+
+# 상 우 하 좌
+dx = [0, 1, 0, -1]
+dy = [-1, 0, 1, 0]
+
+T = int(input())
+for tc in range(1, T+1):
+    N = int(input())
+    grid = [list(map(int, input().split())) for _ in range(N)]
+    
+    # 가장자리의 코어를 빼고 찾기
+    cores = []
+    for y in range(1, N-1):
+        for x in range(1, N-1):
+            if grid[y][x] == 1:
+                cores.append((y, x))
+
+    max_cores = 0
+    min_length = float('inf')
+    total_cores = len(cores)
+    
+    dfs(0, 0, 0)
+    
+    print(f"#{tc} {min_length}")
