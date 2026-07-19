@@ -1,0 +1,71 @@
+def find_starting():
+    max_v = -1
+    
+    for y in range(N):
+        for x in range(N):
+            if max_v < grid[y][x]:
+                max_v = grid[y][x]
+    
+    for y in range(N):
+        for x in range(N):
+            if grid[y][x] == max_v:
+                starting.append((y, x))
+
+
+def cut_that_shit(y, x, k):
+    grid[y][x] -= k
+    
+
+
+def dfs(y, x, length, bool_shit):
+    global ans
+    
+    if ans < length:
+        ans = length
+    
+    sy, sx = y, x
+    
+    for i in range(4):
+        ny, nx = sy + dy[i], sx + dx[i]
+        
+        if 0 <= ny < N and 0 <= nx < N and not visited[ny][nx]:
+            
+            # 다음 가려는 후보지가 현재 위치보다 낮은 경우
+            if grid[sy][sx] > grid[ny][nx]:
+                visited[ny][nx] = True
+                dfs(ny, nx, length + 1, bool_shit)
+                visited[ny][nx] = False
+            
+            # 다음 후보지가 현재 위치보다 같거나 높다면?
+            elif grid[sy][sx] <= grid[ny][nx]:
+                if not bool_shit:
+                    min_cut = grid[ny][nx] - grid[sy][sx] + 1
+                    
+                    if min_cut <= K:
+                        cut_that_shit(ny, nx, min_cut)
+                        visited[ny][nx] = True
+                        dfs(ny, nx, length + 1, True)
+                        cut_that_shit(ny, nx, -min_cut)
+                        visited[ny][nx] = False
+            
+# 상 우 하 좌
+dx = [0, 1 ,0, -1]
+dy = [-1, 0, 1, 0]
+
+T = int(input())
+for tc in range(1, T+1):
+    N, K = map(int, input().split())
+    grid = [list(map(int, input().split())) for _ in range(N)]
+    visited = [[False] * N for _ in range(N)]
+    
+    
+    starting = []
+    find_starting()
+    ans = 1
+    
+    for sy, sx in starting:
+        visited[sy][sx] = True
+        dfs(sy, sx, 1, False)
+        visited[sy][sx] = False
+    
+    print(f"#{tc} {ans}")
