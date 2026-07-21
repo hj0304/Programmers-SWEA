@@ -1,70 +1,68 @@
-# y 좌표를 타고 내려가면서 안정성 여부 검사
 def check():
-    if K == 1:
-        return True
-    
     for x in range(W):
         cnt = 1
         passed = False
         for y in range(1, D):
             if grid[y-1][x] == grid[y][x]:
                 cnt += 1
+                if cnt == K:
+                    passed = True
+                    break
             else:
                 cnt = 1
-            
-            if cnt == K:
-                passed = True
-                break
-            
+                
         if not passed:
             return False
-        
     return True
 
-def solve(row, cnt):
-    global ans
+def dfs(row, cnt, limit):
+    global passed
     
-    # 가지치기
-    if cnt >= ans:
+    if passed:
         return
     
-    if check():
-        ans = min(ans, cnt)
+    if cnt == limit:
+        if check():
+            passed = True
         return
-    
-    # 끝까지 갔을 때 pass가 안된 경우
+        
     if row == D:
         return
     
-    # 3가지 분기
-    # 1. 그대로 계속 진행 
-    # 2. 0으로 색칠
-    # 3. 1로 색칠
+    # 1. 그냥 계속 진행
+    dfs(row+1, cnt, limit)
     
-    
-    
-    # 1. 그대로 진행
-    solve(row+1, cnt)
-    
-    # 2. 0으로 색칠
+    # 2. 0으로 투약
     origin_row = grid[row][:]
     grid[row] = [0] * W
-    solve(row+1, cnt+1)
+    dfs(row+1, cnt+1, limit)
     
-    # 3. 1로 색칠
+    # 3. 1로 투약
     grid[row] = [1] * W
-    solve(row+1, cnt+1)
+    dfs(row+1, cnt+1, limit)
     
     grid[row] = origin_row
     
 
+
+
 T = int(input())
 for tc in range(1, T+1):
-    D, W, K = map(int, input().split())     # D는 두께(세로, Y좌표), W는 가로 크기(X좌표), K는 검수 통과 기준
+    D, W, K = map(int, input().split())     # D는 두께(y좌표), W는 가로길이 (x좌표), K는 검수 기준
     grid = [list(map(int, input().split())) for _ in range(D)]
     
-    ans = float('inf')
+    if K == 1 or check():
+        print(f"#{tc} 0")
+        continue
     
-    solve(0, 0)
+    passed = False
     
-    print(f"#{tc} {ans}")
+    for i in range(1, K+1):
+        dfs(0, 0, i)
+        if passed:
+            print(f"#{tc} {i}")
+            break
+    
+        
+        
+    
